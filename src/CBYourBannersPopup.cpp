@@ -334,6 +334,10 @@ void CBYourBannersPopup::fetchBanners() {
                     retainedSelf->m_earnLabel->setString(fmt::format("+{:.1f}/mo", totalEarnRate).c_str());
                 } else {
                     auto earnNode = CCNode::create();
+                    earnNode->setScale(0.5f);
+                    earnNode->setContentSize({150.f, 30.f});
+                    earnNode->setAnchorPoint({1.f, 0.5f});
+                    earnNode->setLayout(RowLayout::create()->setAxisAlignment(AxisAlignment::End)->setGap(5));
 
                     retainedSelf->m_earnLabel = CCLabelBMFont::create(fmt::format("+{:.1f}/mo", totalEarnRate).c_str(), "bigFont.fnt");
                     retainedSelf->m_earnLabel->limitLabelWidth(80.f, 0.5f, 0.3f);
@@ -348,7 +352,8 @@ void CBYourBannersPopup::fetchBanners() {
                         earnNode->addChild(amethystIcon);
                     }
 
-                    retainedSelf->m_mainLayer->addChildAtPosition(earnNode, Anchor::TopRight, {-30.f, -20.f});
+                    retainedSelf->m_mainLayer->addChildAtPosition(earnNode, Anchor::TopRight, {-10.f, -20.f});
+                    earnNode->updateLayout();
                 }
             }
         });
