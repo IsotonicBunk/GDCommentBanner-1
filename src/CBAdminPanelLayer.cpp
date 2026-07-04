@@ -13,6 +13,7 @@
 #include <Geode/binding/SetTextPopup.hpp>
 #include "CBAdminBannerManagePopup.hpp"
 #include <Geode/ui/Scrollbar.hpp>
+#include <Geode/ui/MDPopup.hpp>
 
 using namespace geode::prelude;
 
@@ -551,11 +552,15 @@ void CBAdminPanelLayer::renderPage() {
 
             // Description
             if (!desc.empty()) {
-                auto descLabel = SimpleTextArea::create(desc.c_str(), "chatFont.fnt", 0.4f, 280.f);
-                descLabel->setAnchorPoint({0.f, 0.5f});
-                descLabel->setPosition({10.f, 10.f});
-                descLabel->setMaxLines(2);
-                cell->addChild(descLabel);
+                if (auto descBtn = geode::Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [desc](geode::Button*) {
+                    MDPopup::create("Description", desc, "OK")->show();
+                })) {
+                    descBtn->setScale(0.6f);
+                    descBtn->setAnchorPoint({0.f, 0.5f});
+                    descBtn->setPosition({currentX, 25.f});
+                    cell->addChild(descBtn);
+                    currentX += (descBtn->getContentSize().width * descBtn->getScale()) + 15.f;
+                }
             }
 
             auto menu = CCMenu::create();
@@ -822,11 +827,15 @@ void CBAdminPanelLayer::renderPage() {
 
             // Description
             if (!desc.empty()) {
-                auto descLabel = SimpleTextArea::create(desc.c_str(), "chatFont.fnt", 0.4f, 280.f);
-                descLabel->setAnchorPoint({0.f, 0.5f});
-                descLabel->setPosition({10.f, 10.f});
-                descLabel->setMaxLines(2);
-                cell->addChild(descLabel);
+                if (auto descBtn = geode::Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [desc](geode::Button*) {
+                    MDPopup::create("Description", desc, "OK")->show();
+                })) {
+                    descBtn->setScale(0.6f);
+                    descBtn->setAnchorPoint({0.f, 0.5f});
+                    descBtn->setPosition({currentX, 25.f});
+                    cell->addChild(descBtn);
+                    currentX += (descBtn->getContentSize().width * descBtn->getScale()) + 15.f;
+                }
             }
 
             auto menu = CCMenu::create();

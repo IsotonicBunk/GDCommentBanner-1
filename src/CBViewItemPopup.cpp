@@ -2,6 +2,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/Button.hpp>
+#include <Geode/ui/MDTextArea.hpp>
 #include "CBBannerCell.hpp"
 #include "CBProfileBannerPopup.hpp"
 #include "CBUsersListBannerPopup.hpp"
@@ -102,19 +103,16 @@ bool CBViewItemPopup::init(const CBBannerItem& banner) {
         }
     }
 
-    auto descriptionLabel = SimpleTextArea::create(m_banner.description.c_str(), "chatFont.fnt");
+    auto descriptionLabel = geode::MDTextArea::create(m_banner.description, {m_mainLayer->getContentSize().width - 40.f, 45.f});
     if (descriptionLabel) {
-        descriptionLabel->setWidth(m_mainLayer->getContentSize().width - 40.f);
-        descriptionLabel->setMaxLines(3);
-        descriptionLabel->setScale(0.8);
-        descriptionLabel->setAlignment(kCCTextAlignmentCenter);
-        m_mainLayer->addChildAtPosition(descriptionLabel, Anchor::Center, {0.f, -20.f}, false);
+        m_mainLayer->addChildAtPosition(descriptionLabel, Anchor::Center, {0.f, -25.f}, false);
     }
 
     auto detailNode = CCNode::create();
-    detailNode->setContentSize({200, 40});
+    detailNode->setContentSize({200, 35});
     detailNode->setAnchorPoint({1.f, 0.f});
     detailNode->setLayout(ColumnLayout::create()
+            ->setGap(0.f)
             ->setCrossAxisAlignment(AxisAlignment::End)
             ->setCrossAxisLineAlignment(AxisAlignment::End)
             ->setAutoScale(false)

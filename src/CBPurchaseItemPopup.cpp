@@ -3,6 +3,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/Button.hpp>
+#include <Geode/ui/MDTextArea.hpp>
 #include <Geode/binding/UploadActionPopup.hpp>
 #include <Geode/utils/web.hpp>
 #include <argon/argon.hpp>
@@ -61,13 +62,9 @@ bool CBPurchaseItemPopup::init(const CBBannerItem& banner) {
         }
     }
 
-    auto descriptionLabel = SimpleTextArea::create(m_banner.description.c_str(), "chatFont.fnt");
+    auto descriptionLabel = geode::MDTextArea::create(m_banner.description, {m_mainLayer->getContentSize().width - 40.f, 45.f});
     if (descriptionLabel) {
-        descriptionLabel->setWidth(m_mainLayer->getContentSize().width - 40.f);
-        descriptionLabel->setMaxLines(3);
-        descriptionLabel->setScale(0.8);
-        descriptionLabel->setAlignment(kCCTextAlignmentCenter);
-        m_mainLayer->addChildAtPosition(descriptionLabel, Anchor::Center, {0.f, -30.f}, false);
+        m_mainLayer->addChildAtPosition(descriptionLabel, Anchor::Center, {0.f, -25.f}, false);
     }
 
     auto cancelButton = geode::Button::createWithNode(

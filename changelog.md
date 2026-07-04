@@ -1,3 +1,8 @@
+## v0.1.6-beta.1
+
+- Fixed issue where amethysts reward given even when the level is already beaten
+- Added Profile Button on the User Banners on the top right of the popup
+
 ## v0.1.5-beta.1
 
 - Added "Featured Banners" and filters banners to show only featured banners

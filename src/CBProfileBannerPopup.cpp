@@ -27,17 +27,11 @@ bool CBProfileBannerPopup::init(int targetAccountId, const std::string& targetUs
     std::string titleStr = targetUsername.empty() ? "User Banners" : fmt::format("{}'s Banners", targetUsername);
     this->setTitle(titleStr, "goldFont.fnt");
 
-    // Make title clickable to open ProfilePage
-    if (m_title) {
-        m_title->setVisible(false);  // Hide the default title, we will replace it with a button
-    }
-
-    auto titleBtn = geode::Button::createWithLabel(titleStr.c_str(), "goldFont.fnt", [this](geode::Button* sender) {
+    auto profileBtn = geode::Button::createWithSpriteFrameName("GJ_profileButton_001.png", [this](geode::Button* sender) {
         ProfilePage::create(m_targetAccountId, false)->show();
     });
-    m_buttonMenu->addChild(titleBtn);
-    titleBtn->setPosition(m_title->getPosition());
-    titleBtn->setScale(m_title->getScale());
+    profileBtn->setScale(0.7f);
+    m_buttonMenu->addChildAtPosition(profileBtn, Anchor::TopRight, {-3.f, -3.f});
 
     m_list = cue::ListNode::create({340.f, 220.f}, {0, 0, 0, 0}, cue::ListBorderStyle::Comments);
     if (m_list) {

@@ -1,4 +1,5 @@
 #include <Geode/Geode.hpp>
+#include <Geode/binding/GameLevelManager.hpp>
 #include <Geode/ui/Button.hpp>
 #include <Geode/ui/LazySprite.hpp>
 #include <Geode/ui/NineSlice.hpp>
@@ -230,6 +231,11 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
 
             if ((level->m_attemptTime <= 25 || level->m_attemptTime >= 28000000) && !level->isPlatformer()) {
                 log::warn("Attempt time is invalid for amethyst reward submission: {}", level->m_attemptTime);
+                return;
+            }
+
+            if (GameStatsManager::sharedState()->hasCompletedOnlineLevel(level->m_levelID)) {
+                log::warn("Level already completed, skip amethyst reward");
                 return;
             }
 

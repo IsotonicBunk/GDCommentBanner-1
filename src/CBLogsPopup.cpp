@@ -113,7 +113,7 @@ void CBLogsPopup::fetchLogs() {
                 cell->setContentSize({340.f, 60.f});
 
                 auto actionLabel = CCLabelBMFont::create(actionType.c_str(), "bigFont.fnt");
-                actionLabel->setScale(0.45f);
+                actionLabel->setScale(0.40f);
                 actionLabel->setAnchorPoint({0.f, 1.f});
                 actionLabel->setPosition({10.f, 58.f});
                 if (actionType == "APPROVED") {
