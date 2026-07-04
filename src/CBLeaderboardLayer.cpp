@@ -127,6 +127,9 @@ void CBLeaderboardLayer::fetchLeaderboard() {
                 int totalEarned = item["totalEarned"].asInt().unwrapOr(0);
                 int totalSales = item["totalSales"].asInt().unwrapOr(0);
                 std::string equippedBannerUrl = item["equippedBannerUrl"].asString().unwrapOr("");
+                bool isAdmin = item["is_admin"].asBool().unwrapOr(false);
+                bool isStaff = item["is_staff"].asBool().unwrapOr(false);
+                bool isSupporter = item["is_supporter"].asBool().unwrapOr(false);
 
                 auto cell = CCNode::create();
                 cell->setContentSize({356.f, 40.f});
@@ -146,13 +149,54 @@ void CBLeaderboardLayer::fetchLeaderboard() {
                 rankLabel->setPosition({10.f, 20.f});
                 cell->addChild(rankLabel);
 
+                // Badges
+                auto badgesNode = CCNode::create();
+                badgesNode->setPosition({45.f, 20.f});
+                badgesNode->setContentSize({90.f, 25.f});
+                badgesNode->setAnchorPoint({0.f, 0.5f});
+                badgesNode->setLayout(RowLayout::create()->setAxisAlignment(AxisAlignment::Start)->setGap(5)->setAutoScale(false));
+                cell->addChild(badgesNode, 1);
+
+                float badgesWidth = 0.f;
+                if (isAdmin) {
+                    if (auto adminBadge = CCSprite::createWithSpriteFrameName("CB_admin_badge.png"_spr)) {
+                        adminBadge->setScale(0.07f);
+                        adminBadge->setAnchorPoint({0.f, 0.5f});
+                        adminBadge->setPosition({badgesWidth, 0.f});
+                        badgesNode->addChild(adminBadge);
+                        badgesWidth += adminBadge->getScaledContentSize().width + 4.f;
+                    }
+                } else if (isStaff) {
+                    if (auto staffBadge = CCSprite::createWithSpriteFrameName("CB_staff_badge.png"_spr)) {
+                        staffBadge->setScale(0.07f);
+                        staffBadge->setAnchorPoint({0.f, 0.5f});
+                        staffBadge->setPosition({badgesWidth, 0.f});
+                        badgesNode->addChild(staffBadge);
+                        badgesWidth += staffBadge->getScaledContentSize().width + 4.f;
+                    }
+                }
+                // will add later
+                if (isSupporter) {
+                    //if (auto supporterBadge = CCSprite::createWithSpriteFrameName("CB_supporter_badge.png"_spr)) {
+                    //    supporterBadge->setScale(0.65f);
+                    //    supporterBadge->setAnchorPoint({0.f, 0.5f});
+                    //    supporterBadge->setPosition({badgesWidth, 0.f});
+                    //    badgesNode->addChild(supporterBadge);
+                    //    badgesWidth += supporterBadge->getScaledContentSize().width + 4.f;
+                    //}
+                }
+                badgesNode->setContentSize({badgesWidth, 0.f});
+                badgesNode->updateLayout();
+
+                float currentX = 45.f + badgesWidth;
+
                 // Username
                 auto menu = CCMenu::create();
                 menu->setPosition({0, 0});
                 cell->addChild(menu);
 
                 auto usernameLabel = CCLabelBMFont::create(username.c_str(), "bigFont.fnt");
-                usernameLabel->limitLabelWidth(120.f, 0.6f, 0.1f);
+                usernameLabel->limitLabelWidth(std::max(60.f, 165.f - currentX), 0.6f, 0.1f);
 
                 auto usernameBtn = geode::Button::createWithNode(
                     usernameLabel,
@@ -163,7 +207,7 @@ void CBLeaderboardLayer::fetchLeaderboard() {
                     });
 
                 usernameBtn->setAnchorPoint({0.f, 0.5f});
-                usernameBtn->setPosition({45.f, 20.f});
+                usernameBtn->setPosition({currentX, 20.f});
                 menu->addChild(usernameBtn);
 
                 // Earned
