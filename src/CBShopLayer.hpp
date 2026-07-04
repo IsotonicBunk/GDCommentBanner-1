@@ -21,6 +21,7 @@ public:
     void onPrevPage(CCObject* sender);
     void setEquippedBannerId(int bannerId);
     int getEquippedBannerId() const { return m_equippedBannerId; }
+    void updateLocalEquippedState();
 
     void setTextPopupClosed(SetTextPopup* popup, gd::string text) override;
 
@@ -52,5 +53,6 @@ private:
     CCMenuItemSpriteExtra* m_nextButton = nullptr;
     CCLabelBMFont* m_pageLabel = nullptr;
     CCLabelBMFont* m_noBannersLabel = nullptr;
+    CCNode* m_localOverlay = nullptr;
     std::vector<CBBannerItem> m_banners;
 };

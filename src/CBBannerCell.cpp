@@ -147,13 +147,15 @@ CBBannerCell* CBBannerCell::create(const CBBannerItem& banner, float width) {
                 } else {
                     comment::local::equipLocalBanner(banner.id);
                 }
-                if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+                if (auto popup = CBLocalBannersPopup::getInstance()) {
+                    popup->fetchBanners();
+                } else if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
                     if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
                         popup->fetchBanners();
                     }
-                    if (auto shop = CBShopLayer::getInstance()) {
-                        shop->refreshBanners();
-                    }
+                }
+                if (auto shop = CBShopLayer::getInstance()) {
+                    shop->refreshBanners();
                 }
             })) {
             equipButton->setScale(0.6f);
@@ -164,13 +166,15 @@ CBBannerCell* CBBannerCell::create(const CBBannerItem& banner, float width) {
                 geode::createQuickPopup("Delete Local Banner", "Are you sure you want to <cr>delete</c> this local banner from your device?", "Cancel", "Delete", [banner](FLAlertLayer*, bool btn2) {
                     if (!btn2) return;
                     comment::local::deleteLocalBanner(banner.id);
-                    if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+                    if (auto popup = CBLocalBannersPopup::getInstance()) {
+                        popup->fetchBanners();
+                    } else if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
                         if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
                             popup->fetchBanners();
                         }
-                        if (auto shop = CBShopLayer::getInstance()) {
-                            shop->refreshBanners();
-                        }
+                    }
+                    if (auto shop = CBShopLayer::getInstance()) {
+                        shop->refreshBanners();
                     }
                 });
             })) {

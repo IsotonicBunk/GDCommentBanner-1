@@ -59,7 +59,7 @@ bool CBSubmitBannerPopup::init(bool isLocal) {
     m_buttonMenu->addChildAtPosition(topMenu, Anchor::Top, {0.f, -50.f}, {0.5, 0.5});
 
     m_fileNameLabel = CCLabelBMFont::create("No file selected (1500x150) (Static or Animated)", "chatFont.fnt");
-    m_fileNameLabel->limitLabelWidth(m_mainLayer->getContentWidth() - 20.f, 0.8f, 0.4f);
+    m_fileNameLabel->limitLabelWidth(m_mainLayer->getContentWidth() - 20.f, 0.8f, 0.1f);
     m_fileNameLabel->setColor({200, 200, 200});
     m_mainLayer->addChildAtPosition(m_fileNameLabel, Anchor::Top, {0.f, -75.f}, false);
 
@@ -239,7 +239,9 @@ void CBSubmitBannerPopup::onSubmit(CCObject*) {
 
         if (comment::local::addLocalBanner(m_nameInput->getString(), m_selectedFilePath)) {
             geode::Notification::create("Local banner added successfully!", geode::NotificationIcon::Success)->show();
-            if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+            if (auto popup = CBLocalBannersPopup::getInstance()) {
+                popup->fetchBanners();
+            } else if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
                 if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
                     popup->fetchBanners();
                 }
@@ -371,7 +373,7 @@ void CBSubmitBannerPopup::onPreview(CCObject*) {
     if (m_selectedFilePath.empty()) return;
 
     auto blockLayer = CCBlockLayer::create();
-    blockLayer->setZOrder(this->m_scene->getZOrder() + 1);
+    blockLayer->setZOrder(5);
 
     auto menu = CCMenu::create();
     menu->setZOrder(1);
@@ -390,7 +392,7 @@ void CBSubmitBannerPopup::onPreview(CCObject*) {
     image->setPosition(winSize / 2);
     blockLayer->addChild(image);
 
-    CCDirector::sharedDirector()->getRunningScene()->addChild(blockLayer);
+    this->addChild(blockLayer);
 }
 
 void CBSubmitBannerPopup::onClosePreview(CCObject* sender) {

@@ -8,6 +8,7 @@
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/CommentCell.hpp>
 #include <Geode/modify/EndLevelLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/CurrencyRewardLayer.hpp>
 #include "../CBShopLayer.hpp"
 #include "../include/CBConstant.hpp"
@@ -212,6 +213,20 @@ class $modify(CBCommentCell, CommentCell) {
     }
 };
 
+class $modify(CBPlayLayer, PlayLayer) {
+    struct Fields {
+        bool m_wasCompletedBefore = false;
+    };
+
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+        m_fields->m_wasCompletedBefore = GameStatsManager::sharedState()->hasCompletedOnlineLevel(level->m_levelID) || GameStatsManager::sharedState()->hasCompletedLevel(level);
+        log::debug("completed level for ame? {}", m_fields->m_wasCompletedBefore);
+        return true;
+    }
+};
+
 class $modify(CBEndLevelLayer, EndLevelLayer) {
     void customSetup() {
         EndLevelLayer::customSetup();
@@ -251,8 +266,9 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
                 return;
             }
 
-            if (GameStatsManager::sharedState()->hasCompletedOnlineLevel(level->m_levelID)) {
-                log::warn("Level already completed, skip amethyst reward");
+            auto playLayer = static_cast<CBPlayLayer*>(endLayer->m_playLayer);
+            if (playLayer && playLayer->m_fields->m_wasCompletedBefore) {
+                log::warn("Level already completed before this run, skip amethyst reward");
                 return;
             }
 

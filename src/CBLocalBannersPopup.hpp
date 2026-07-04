@@ -8,12 +8,15 @@ using namespace geode::prelude;
 class CBLocalBannersPopup : public geode::Popup {
 public:
     static CBLocalBannersPopup* create();
+    static CBLocalBannersPopup* getInstance();
     void fetchBanners();
 
 private:
     bool init() override;
+    ~CBLocalBannersPopup() override;
     void onAddBanner(CCObject* sender);
 
+    static CBLocalBannersPopup* s_instance;
     cue::ListNode* m_list = nullptr;
     CCLabelBMFont* m_noBannersLabel = nullptr;
 };

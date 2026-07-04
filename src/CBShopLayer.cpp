@@ -4,8 +4,8 @@
 #include <Geode/binding/UploadActionPopup.hpp>
 #include <Geode/ui/Button.hpp>
 #include "CBShopLayer.hpp"
-#include "CBShopLayer.hpp"
-#include "CBShopLayer.hpp"
+#include "Geode/ui/TextArea.hpp"
+#include "include/CBLocalBanner.hpp"
 #include "CBBannerCell.hpp"
 #include "CBSubmitBannerPopup.hpp"
 #include "CBLogsPopup.hpp"
@@ -36,11 +36,33 @@ void CBShopLayer::refreshBanners() {
     if (m_loadingCircle) {
         m_loadingCircle->fadeIn();
     }
+    this->updateLocalEquippedState();
     this->fetchBanners();
 }
 
 void CBShopLayer::setEquippedBannerId(int bannerId) {
     m_equippedBannerId = bannerId;
+}
+
+void CBShopLayer::updateLocalEquippedState() {
+    bool isLocalEquipped = !comment::local::getEquippedLocalBannerUrl().empty();
+    if (m_localOverlay) {
+        m_localOverlay->setVisible(isLocalEquipped);
+    }
+    if (m_list) {
+        m_list->setVisible(!isLocalEquipped);
+    }
+    if (m_noBannersLabel && isLocalEquipped) {
+        m_noBannersLabel->setVisible(false);
+    } else if (m_noBannersLabel && !isLocalEquipped) {
+        m_noBannersLabel->setVisible(m_banners.empty());
+    }
+    if (auto paginationMenu = this->getChildByID("pagination-menu")) {
+        paginationMenu->setVisible(!isLocalEquipped);
+    }
+    if (m_pageLabel) {
+        m_pageLabel->setVisible(!isLocalEquipped);
+    }
 }
 
 CBShopLayer::~CBShopLayer() {
@@ -242,6 +264,7 @@ void CBShopLayer::populateList() {
     if (m_noBannersLabel) {
         m_noBannersLabel->setVisible(m_banners.empty());
     }
+    this->updateLocalEquippedState();
 
     int totalPages = std::ceil((float)m_totalItems / m_itemsPerPage);
     if (m_pageLabel) {
@@ -550,7 +573,7 @@ bool CBShopLayer::init() {
     navMenu->addChild(yourBannersBtn);
 
     auto localBtn = geode::Button::createWithNode(
-        ButtonSprite::create("Local", "goldFont.fnt", "GJ_button_03.png", .75f),
+        ButtonSprite::create("Local", "goldFont.fnt", "GJ_button_05.png", .75f),
         [](geode::Button* sender) {
             if (auto popup = CBLocalBannersPopup::create()) {
                 popup->show();
@@ -559,11 +582,32 @@ bool CBShopLayer::init() {
     localBtn->setID("local-button");
     navMenu->addChild(localBtn);
 
-    this->addChildAtPosition(navMenu, Anchor::Top, {0.f, -35.f}, false);
+    this->addChildAtPosition(navMenu, Anchor::Top, {0.f, -40.f}, false);
     navMenu->updateLayout();
+
+    m_localOverlay = CCNode::create();
+    m_localOverlay->setContentSize({356.f, winSize.height - 85.f});
+    m_localOverlay->setAnchorPoint({0.5f, 0.5f});
+    m_localOverlay->setZOrder(10);
+    this->addChildAtPosition(m_localOverlay, Anchor::Center, {0.f, -22.f}, false);
+
+    if (auto headerLabel = CCLabelBMFont::create("Local Banner Equipped", "goldFont.fnt")) {
+        headerLabel->setScale(0.7f);
+        m_localOverlay->addChildAtPosition(headerLabel, Anchor::Center, {0.f, 25.f}, false);
+    }
+
+    if (auto descLabel = SimpleTextArea::create(
+            "You currently have a local banner equipped.\n"
+            "Shop banners are disabled.")) {
+        descLabel->setAlignment(CCTextAlignment::kCCTextAlignmentCenter);
+        m_localOverlay->addChildAtPosition(descLabel, Anchor::Center, {0.f, -10.f}, false);
+    }
+
+    this->updateLocalEquippedState();
 
     // Pagination Menu
     auto paginationMenu = CCMenu::create();
+    paginationMenu->setID("pagination-menu");
 
     auto prevSprite = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     prevSprite->setScale(0.8f);

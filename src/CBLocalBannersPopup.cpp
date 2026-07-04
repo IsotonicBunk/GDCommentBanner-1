@@ -4,8 +4,15 @@
 #include "include/CBLocalBanner.hpp"
 #include <Geode/ui/Scrollbar.hpp>
 #include <Geode/ui/Button.hpp>
+#include <algorithm>
 
 using namespace geode::prelude;
+
+CBLocalBannersPopup* CBLocalBannersPopup::s_instance = nullptr;
+
+CBLocalBannersPopup* CBLocalBannersPopup::getInstance() {
+    return s_instance;
+}
 
 CBLocalBannersPopup* CBLocalBannersPopup::create() {
     auto ret = new CBLocalBannersPopup();
@@ -20,6 +27,7 @@ CBLocalBannersPopup* CBLocalBannersPopup::create() {
 bool CBLocalBannersPopup::init() {
     if (!Popup::init(380.f, 280.f)) return false;
 
+    Ref<CBLocalBannersPopup> s_instance = this;
     this->setTitle("Local Banners");
 
     m_list = cue::ListNode::create({340.f, 190.f}, {0, 0, 0, 0}, cue::ListBorderStyle::Comments);
@@ -47,6 +55,12 @@ bool CBLocalBannersPopup::init() {
     return true;
 }
 
+CBLocalBannersPopup::~CBLocalBannersPopup() {
+    if (s_instance == this) {
+        s_instance = nullptr;
+    }
+}
+
 void CBLocalBannersPopup::onAddBanner(CCObject* sender) {
     if (auto popup = CBSubmitBannerPopup::create(true)) {
         popup->show();
@@ -61,10 +75,15 @@ void CBLocalBannersPopup::fetchBanners() {
     auto banners = comment::local::getLocalBanners();
     if (banners.empty()) {
         if (m_noBannersLabel) m_noBannersLabel->setVisible(true);
+        if (m_list) m_list->updateLayout();
         return;
     }
 
     if (m_noBannersLabel) m_noBannersLabel->setVisible(false);
+
+    std::stable_sort(banners.begin(), banners.end(), [](const auto& a, const auto& b) {
+        return a.equipped > b.equipped;
+    });
 
     for (auto const& b : banners) {
         CBBannerItem item;
@@ -76,7 +95,12 @@ void CBLocalBannersPopup::fetchBanners() {
         item.owns = true;
 
         if (auto cell = CBBannerCell::create(item, 340.f)) {
-            m_list->addChild(cell);
+            if (m_list) {
+                m_list->addCell(cell);
+            }
         }
+    }
+    if (m_list) {
+        m_list->updateLayout();
     }
 }
