@@ -1,14 +1,14 @@
 ## v0.1.7-beta.1
 
 - Hotfix the amount text input not align correctly when limited is toggled
-- Fixed any mishandled argon authorization
-- Fixed any mishandled background coroutine ruuning in the worker threads
+- Fixed mishandled argon authorization
+- Fixed mishandled background coroutines running in the worker threads
 - Fixed issue where loading badge in the profile page crashes the game
 - Reason for approving/rejecting pending banners are now optional
 
 ## v0.1.6-beta.1
 
-- Fixed issue where amethysts reward given even when the level is already beaten
+- Fixed issue where amethysts reward is given even when the level is already beaten
 - Replaced the Description text to use MDTextArea
 - Added Profile Button on the User Banners on the top right of the popup
 - Added Badge for **Admin** and **Staff** using [Badgify API](mod:alphalaneous.badgify)
