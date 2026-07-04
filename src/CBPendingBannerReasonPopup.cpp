@@ -22,7 +22,7 @@ bool CBPendingBannerReasonPopup::init(int bannerId, bool isReject, CBAdminPanelL
     m_adminPanel = adminPanel;
 
     this->setTitle(isReject ? "Reject Banner" : "Approve Banner");
-    addSideArt(m_mainLayer, SideArt::Top, SideArtStyle::PopupGold);
+    addSideArt(m_mainLayer, SideArt::All, SideArtStyle::PopupBlue);
 
     m_reasonInput = TextInput::create(260.f, "Enter reason here...");
     m_reasonInput->setCommonFilter(CommonFilter::Any);
