@@ -11,6 +11,8 @@
 #include <Geode/ui/Button.hpp>
 #include <Geode/utils/web.hpp>
 #include <argon/argon.hpp>
+#include "include/CBLocalBanner.hpp"
+#include "CBLocalBannersPopup.hpp"
 
 struct EquipRequest {
     int AccountID;
@@ -36,7 +38,7 @@ CBBannerCell* CBBannerCell::create(const CBBannerItem& banner, float width) {
         ccColor3B bgColor = {255, 255, 255};
         if (banner.equipped) {
             bgColor = {255, 165, 0};  // Orange
-        } else if (banner.owns) {
+        } else if (banner.owns || banner.isLocal) {
             bgColor = {0, 200, 0};  // Green
         }
         background->setColor(bgColor);
@@ -100,7 +102,7 @@ CBBannerCell* CBBannerCell::create(const CBBannerItem& banner, float width) {
         }
     }
 
-    if (!banner.username.empty()) {
+    if (!banner.isLocal && !banner.username.empty()) {
         if (auto usernameLabel = Button::createWithLabel(fmt::format("By {}", banner.username).c_str(), "goldFont.fnt", [banner](geode::Button* sender) {
                 CBProfileBannerPopup::create(banner.accountId, banner.username)->show();
             })) {
@@ -111,70 +113,111 @@ CBBannerCell* CBBannerCell::create(const CBBannerItem& banner, float width) {
         }
     }
 
-    if (auto price = CCLabelBMFont::create(fmt::format("{}", GameToolbox::pointsToString(banner.price)).c_str(), "bigFont.fnt")) {
-        price->setAnchorPoint({0.f, 0.5f});
-        price->setScale(0.5f);
-        price->setPosition({0.f, 0.f});
+    if (!banner.isLocal) {
+        if (auto price = CCLabelBMFont::create(fmt::format("{}", GameToolbox::pointsToString(banner.price)).c_str(), "bigFont.fnt")) {
+            price->setAnchorPoint({0.f, 0.5f});
+            price->setScale(0.5f);
+            price->setPosition({0.f, 0.f});
 
-        auto priceNode = CCNode::create();
-        float priceX = 20.f;
-        if (nameLabel) {
-            priceX = nameLabel->getPositionX() + nameLabel->getContentSize().width * nameLabel->getScale() + 10.f;
+            auto priceNode = CCNode::create();
+            float priceX = 20.f;
+            if (nameLabel) {
+                priceX = nameLabel->getPositionX() + nameLabel->getContentSize().width * nameLabel->getScale() + 10.f;
+            }
+            priceNode->setPosition({priceX, 25.f});
+
+            priceNode->addChild(price);
+
+            if (auto amethystIcon = CCSprite::createWithSpriteFrameName("CB_amethyst_002.png"_spr)) {
+                amethystIcon->setScale(0.5f);
+                auto priceWidth = price->getContentSize().width * price->getScale();
+                amethystIcon->setPosition({priceWidth + 4.f, 0.f});
+                amethystIcon->setAnchorPoint({0.f, 0.5f});
+                priceNode->addChild(amethystIcon);
+            }
+
+            cellBg->addChild(priceNode);
         }
-        priceNode->setPosition({priceX, 25.f});
-
-        priceNode->addChild(price);
-
-        if (auto amethystIcon = CCSprite::createWithSpriteFrameName("CB_amethyst_002.png"_spr)) {
-            amethystIcon->setScale(0.5f);
-            auto priceWidth = price->getContentSize().width * price->getScale();
-            amethystIcon->setPosition({priceWidth + 4.f, 0.f});
-            amethystIcon->setAnchorPoint({0.f, 0.5f});
-            priceNode->addChild(amethystIcon);
-        }
-
-        cellBg->addChild(priceNode);
     }
 
-    if (auto buyButton = Button::createWithNode(ButtonSprite::create(banner.equipped ? "Unequip" : (banner.owns ? "Equip" : "Buy"), 100.f, true, "goldFont.fnt", banner.equipped ? "GJ_button_06.png" : (banner.owns ? "GJ_button_02.png" : "GJ_button_01.png"), .0f, 1.f), [cellBg, banner](geode::Button* sender) {
-            if (banner.equipped) {
-                cellBg->unequipBanner();
-                return;
-            }
-            if (banner.owns) {
-                cellBg->applyBanner();
-                return;
-            }
+    if (banner.isLocal) {
+        if (auto equipButton = Button::createWithNode(ButtonSprite::create(banner.equipped ? "Unequip" : "Equip", 100.f, true, "goldFont.fnt", banner.equipped ? "GJ_button_06.png" : "GJ_button_02.png", .0f, 1.f), [banner](geode::Button* sender) {
+                if (banner.equipped) {
+                    comment::local::unequipLocalBanner();
+                } else {
+                    comment::local::equipLocalBanner(banner.id);
+                }
+                if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+                    if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
+                        popup->fetchBanners();
+                    }
+                    if (auto shop = CBShopLayer::getInstance()) {
+                        shop->refreshBanners();
+                    }
+                }
+            })) {
+            equipButton->setScale(0.6f);
+            cellBg->addChildAtPosition(equipButton, Anchor::BottomRight, {-50.f, 15.f}, false);
+        }
 
-            auto cost = banner.price;
-            auto current = Mod::get()->getSavedValue<int>("amethyst", 0);
-            if (current < cost) {
-                geode::createQuickPopup(
-                    "Not enough Amethyst",
-                    fmt::format("You need <cp>{} Amethyst</c> to <cg>buy this banner</c>.", cost - current),
-                    "OK",
-                    nullptr,
-                    300.f,
-                    [](FLAlertLayer* layer, bool btn2) {},
-                    true,
-                    true);
-                return;
-            }
-            if (auto popup = CBPurchaseItemPopup::create(cellBg->m_banner)) {
-                popup->show();
-            }
-        })) {
-        buyButton->setScale(0.6f);
-        cellBg->addChildAtPosition(buyButton, Anchor::BottomRight, {-50.f, 15.f}, false);
-    }
+        if (auto deleteButton = Button::createWithNode(ButtonSprite::create("Delete", 100.f, true, "goldFont.fnt", "GJ_button_06.png", .0f, 1.f), [banner](geode::Button* sender) {
+                geode::createQuickPopup("Delete Local Banner", "Are you sure you want to <cr>delete</c> this local banner from your device?", "Cancel", "Delete", [banner](FLAlertLayer*, bool btn2) {
+                    if (!btn2) return;
+                    comment::local::deleteLocalBanner(banner.id);
+                    if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+                        if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
+                            popup->fetchBanners();
+                        }
+                        if (auto shop = CBShopLayer::getInstance()) {
+                            shop->refreshBanners();
+                        }
+                    }
+                });
+            })) {
+            deleteButton->setScale(0.6f);
+            cellBg->addChildAtPosition(deleteButton, Anchor::BottomRight, {-50.f, 35.f}, false);
+        }
+    } else {
+        if (auto buyButton = Button::createWithNode(ButtonSprite::create(banner.equipped ? "Unequip" : (banner.owns ? "Equip" : "Buy"), 100.f, true, "goldFont.fnt", banner.equipped ? "GJ_button_06.png" : (banner.owns ? "GJ_button_02.png" : "GJ_button_01.png"), .0f, 1.f), [cellBg, banner](geode::Button* sender) {
+                if (banner.equipped) {
+                    cellBg->unequipBanner();
+                    return;
+                }
+                if (banner.owns) {
+                    cellBg->applyBanner();
+                    return;
+                }
 
-    if (auto infoBtn = Button::createWithNode(ButtonSprite::create("Info", 100.f, true, "goldFont.fnt", "GJ_button_01.png", .0f, 1.f), [banner](geode::Button* sender) {
-            if (auto popup = CBViewItemPopup::create(banner)) {
-                popup->show();
-            }
-        })) {
-        infoBtn->setScale(0.6f);
-        cellBg->addChildAtPosition(infoBtn, Anchor::BottomRight, {-50.f, 35.f}, false);
+                auto cost = banner.price;
+                auto current = Mod::get()->getSavedValue<int>("amethyst", 0);
+                if (current < cost) {
+                    geode::createQuickPopup(
+                        "Not enough Amethyst",
+                        fmt::format("You need <cp>{} Amethyst</c> to <cg>buy this banner</c>.", cost - current),
+                        "OK",
+                        nullptr,
+                        300.f,
+                        [](FLAlertLayer* layer, bool btn2) {},
+                        true,
+                        true);
+                    return;
+                }
+                if (auto popup = CBPurchaseItemPopup::create(cellBg->m_banner)) {
+                    popup->show();
+                }
+            })) {
+            buyButton->setScale(0.6f);
+            cellBg->addChildAtPosition(buyButton, Anchor::BottomRight, {-50.f, 15.f}, false);
+        }
+
+        if (auto infoBtn = Button::createWithNode(ButtonSprite::create("Info", 100.f, true, "goldFont.fnt", "GJ_button_01.png", .0f, 1.f), [banner](geode::Button* sender) {
+                if (auto popup = CBViewItemPopup::create(banner)) {
+                    popup->show();
+                }
+            })) {
+            infoBtn->setScale(0.6f);
+            cellBg->addChildAtPosition(infoBtn, Anchor::BottomRight, {-50.f, 35.f}, false);
+        }
     }
 
     return cellBg;

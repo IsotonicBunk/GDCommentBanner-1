@@ -11,6 +11,7 @@
 #include <Geode/modify/CurrencyRewardLayer.hpp>
 #include "../CBShopLayer.hpp"
 #include "../include/CBConstant.hpp"
+#include "../include/CBLocalBanner.hpp"
 
 using namespace geode::prelude;
 
@@ -115,6 +116,22 @@ class $modify(CBCommentCell, CommentCell) {
 
         auto self = Ref<CBCommentCell>(this);
         int accountId = comment->m_accountID;
+
+        // Check local banner priority for own comment
+        int myAccountId = GJAccountManager::sharedState()->m_accountID;
+        if (myAccountId == 0) {
+            myAccountId = argon::getGameAccountData().accountId;
+        }
+        if (myAccountId > 0 && accountId == myAccountId) {
+            std::string equippedLocal = Mod::get()->getSavedValue<std::string>("equipped-local-banner", "");
+            if (!equippedLocal.empty()) {
+                auto localPath = comment::local::getLocalBannersDir() / equippedLocal;
+                if (std::filesystem::exists(localPath)) {
+                    setupBannerSprite(self.data(), localPath.string());
+                    return;
+                }
+            }
+        }
 
         // Check cache
         {

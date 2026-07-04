@@ -6,14 +6,17 @@
 #include "Geode/ui/General.hpp"
 #include "Geode/utils/general.hpp"
 #include "include/CBConstant.hpp"
+#include "include/CBLocalBanner.hpp"
+#include "CBLocalBannersPopup.hpp"
 #include <Geode/utils/file.hpp>
 #include <algorithm>
+#include <unordered_set>
 
 using namespace geode::prelude;
 
-CBSubmitBannerPopup* CBSubmitBannerPopup::create() {
+CBSubmitBannerPopup* CBSubmitBannerPopup::create(bool isLocal) {
     auto ret = new CBSubmitBannerPopup();
-    if (ret && ret->init()) {
+    if (ret && ret->init(isLocal)) {
         ret->autorelease();
         return ret;
     }
@@ -21,12 +24,18 @@ CBSubmitBannerPopup* CBSubmitBannerPopup::create() {
     return nullptr;
 }
 
-bool CBSubmitBannerPopup::init() {
+bool CBSubmitBannerPopup::init(bool isLocal) {
     if (!Popup::init(380.f, 260.f)) return false;
 
-    this->setTitle("Submit Comment Banner");
-    addSideArt(m_mainLayer, SideArt::Top, SideArtStyle::PopupBlue, false);
-    addSideArt(m_mainLayer, SideArt::BottomRight, SideArtStyle::PopupBlue, false);
+    m_isLocal = isLocal;
+    this->setTitle(m_isLocal ? "Add Local Banner" : "Submit Comment Banner");
+
+    if (!m_isLocal) {
+        addSideArt(m_mainLayer, SideArt::Top, SideArtStyle::PopupBlue, false);
+        addSideArt(m_mainLayer, SideArt::BottomRight, SideArtStyle::PopupBlue, false);
+    } else {
+        addSideArt(m_mainLayer, SideArt::All, SideArtStyle::PopupBlue, false);
+    }
 
     // Pick File Button
     auto pickFileBtn = CCMenuItemSpriteExtra::create(
@@ -120,6 +129,14 @@ bool CBSubmitBannerPopup::init() {
 
     m_mainLayer->addChildAtPosition(limitedMenu, Anchor::BottomLeft, {5.f, 10.f});
 
+    if (m_isLocal) {
+        m_descInput->setVisible(false);
+        row1->setVisible(false);
+        costRow->setVisible(false);
+        limitedMenu->setVisible(false);
+        m_nameInput->setPositionY(m_nameInput->getPositionY() - 30);
+    }
+
     // Submit Button
     auto submitBtn = CCMenuItemSpriteExtra::create(
         ButtonSprite::create("Submit", "goldFont.fnt", "GJ_button_01.png", .8f),
@@ -134,15 +151,16 @@ void CBSubmitBannerPopup::onToggleLimited(CCObject* sender) {
     bool toggled = !static_cast<CCMenuItemToggler*>(sender)->isToggled();
     if (m_amountInput) {
         m_amountInput->setVisible(toggled);
-        if (auto row = m_amountInput->getParent()) {
-            static_cast<CCMenu*>(row)->updateLayout();
-        }
     }
 }
 
 void CBSubmitBannerPopup::onPickFile(CCObject*) {
     Ref<CBSubmitBannerPopup> retainedSelf = this;
     arc::spawn([retainedSelf]() -> arc::Future<> {
+        std::unordered_set<std::string> allowedFiles = retainedSelf->m_isLocal
+                                                           ? std::unordered_set<std::string>{"*.png", "*.webp", "*.gif"}
+                                                           : std::unordered_set<std::string>{"*.png", "*.webp", "*.jpg", "*.jpeg", "*.gif"};
+
         auto result = co_await geode::utils::file::pick(
             geode::utils::file::PickMode::OpenFile,
             geode::utils::file::FilePickOptions{
@@ -150,7 +168,7 @@ void CBSubmitBannerPopup::onPickFile(CCObject*) {
                 .filters = {
                     geode::utils::file::FilePickOptions::Filter{
                         .description = "Image Files",
-                        .files = {"*.png", "*.webp", "*.jpg", "*.jpeg", "*.gif"}}}});
+                        .files = allowedFiles}}});
 
         auto notify = [&](std::string message) {
             geode::Loader::get()->queueInMainThread([message = std::move(message)]() {
@@ -165,9 +183,16 @@ void CBSubmitBannerPopup::onPickFile(CCObject*) {
 
                 auto extension = path.extension().string();
                 std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-                if (extension != ".png" && extension != ".webp" && extension != ".jpg" && extension != ".jpeg" && extension != ".gif") {
-                    notify("Please select a PNG, JPEG, GIF or WEBP file");
-                    co_return;
+                if (retainedSelf->m_isLocal) {
+                    if (extension != ".png" && extension != ".webp" && extension != ".gif") {
+                        notify("Please select a PNG, GIF or WEBP file");
+                        co_return;
+                    }
+                } else {
+                    if (extension != ".png" && extension != ".webp" && extension != ".jpg" && extension != ".jpeg" && extension != ".gif") {
+                        notify("Please select a PNG, JPEG, GIF or WEBP file");
+                        co_return;
+                    }
                 }
 
                 if (extension != ".gif") {
@@ -202,6 +227,30 @@ void CBSubmitBannerPopup::onPickFile(CCObject*) {
 }
 
 void CBSubmitBannerPopup::onSubmit(CCObject*) {
+    if (m_isLocal) {
+        if (m_selectedFilePath.empty()) {
+            geode::Notification::create("Please select an image file.", geode::NotificationIcon::Error)->show();
+            return;
+        }
+        if (m_nameInput->getString().empty()) {
+            geode::Notification::create("Please enter a banner name.", geode::NotificationIcon::Error)->show();
+            return;
+        }
+
+        if (comment::local::addLocalBanner(m_nameInput->getString(), m_selectedFilePath)) {
+            geode::Notification::create("Local banner added successfully!", geode::NotificationIcon::Success)->show();
+            if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+                if (auto popup = scene->getChildByType<CBLocalBannersPopup>(0)) {
+                    popup->fetchBanners();
+                }
+            }
+            this->onClose(nullptr);
+        } else {
+            geode::Notification::create("Failed to save local banner.", geode::NotificationIcon::Error)->show();
+        }
+        return;
+    }
+
     int currentAmethysts = Mod::get()->getSavedValue<int>("amethyst", 0);
     bool hasCreatedBanner = Mod::get()->getSavedValue<bool>("has_created_banner", false);
     if (currentAmethysts < 15000 && hasCreatedBanner) {
@@ -322,7 +371,7 @@ void CBSubmitBannerPopup::onPreview(CCObject*) {
     if (m_selectedFilePath.empty()) return;
 
     auto blockLayer = CCBlockLayer::create();
-    blockLayer->setZOrder(105);
+    blockLayer->setZOrder(this->m_scene->getZOrder() + 1);
 
     auto menu = CCMenu::create();
     menu->setZOrder(1);

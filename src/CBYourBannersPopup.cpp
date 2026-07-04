@@ -22,7 +22,7 @@ CBYourBannersPopup* CBYourBannersPopup::create() {
 bool CBYourBannersPopup::init() {
     if (!Popup::init(380.f, 280.f)) return false;
 
-    this->setTitle("Your Banners");
+    this->setTitle("Your Online Banners");
 
     m_list = cue::ListNode::create({340.f, 220.f}, {0, 0, 0, 0}, cue::ListBorderStyle::Comments);
     if (m_list) {

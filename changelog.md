@@ -1,10 +1,13 @@
 ## v0.1.6-beta.1
 
 - Fixed issue where amethysts reward given even when the level is already beaten
+- Replaced the Description text to use MDTextArea
 - Added Profile Button on the User Banners on the top right of the popup
 - Added Badge for **Admin** and **Staff** using [Badgify API](mod:alphalaneous.badgify)
 
 <mod:alphalaneous.badgify>
+
+- Added **Local Banners**, you can apply your own banners locally
 
 ## v0.1.5-beta.1
 

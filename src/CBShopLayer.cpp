@@ -11,6 +11,7 @@
 #include "CBLogsPopup.hpp"
 #include "CBAdminPanelLayer.hpp"
 #include "CBYourBannersPopup.hpp"
+#include "CBLocalBannersPopup.hpp"
 #include "CBLeaderboardLayer.hpp"
 #include <Geode/binding/SetTextPopup.hpp>
 #include "Geode/ui/Layout.hpp"
@@ -516,10 +517,10 @@ bool CBShopLayer::init() {
     auto navMenu = CCMenu::create();
     navMenu->setID("nav-menu");
     navMenu->setContentSize({356, 30});
-    navMenu->setLayout(RowLayout::create()->setGap(10.f));
+    navMenu->setLayout(RowLayout::create()->setGap(6.f));
 
     auto submitBtn = geode::Button::createWithNode(
-        ButtonSprite::create("Submit", "goldFont.fnt", "GJ_button_01.png", .8f),
+        ButtonSprite::create("Submit", "goldFont.fnt", "GJ_button_01.png", .75f),
         [](geode::Button* sender) {
             if (auto popup = CBSubmitBannerPopup::create()) {
                 popup->show();
@@ -529,7 +530,7 @@ bool CBShopLayer::init() {
     navMenu->addChild(submitBtn);
 
     auto logsBtn = geode::Button::createWithNode(
-        ButtonSprite::create("Logs", "goldFont.fnt", "GJ_button_01.png", .8f),
+        ButtonSprite::create("Logs", "goldFont.fnt", "GJ_button_01.png", .75f),
         [](geode::Button* sender) {
             if (auto popup = CBLogsPopup::create()) {
                 popup->show();
@@ -539,7 +540,7 @@ bool CBShopLayer::init() {
     navMenu->addChild(logsBtn);
 
     auto yourBannersBtn = geode::Button::createWithNode(
-        ButtonSprite::create("Your Banners", "goldFont.fnt", "GJ_button_01.png", .8f),
+        ButtonSprite::create("Your Banners", "goldFont.fnt", "GJ_button_01.png", .75f),
         [](geode::Button* sender) {
             if (auto popup = CBYourBannersPopup::create()) {
                 popup->show();
@@ -547,6 +548,16 @@ bool CBShopLayer::init() {
         });
     yourBannersBtn->setID("your-banners-button");
     navMenu->addChild(yourBannersBtn);
+
+    auto localBtn = geode::Button::createWithNode(
+        ButtonSprite::create("Local", "goldFont.fnt", "GJ_button_03.png", .75f),
+        [](geode::Button* sender) {
+            if (auto popup = CBLocalBannersPopup::create()) {
+                popup->show();
+            }
+        });
+    localBtn->setID("local-button");
+    navMenu->addChild(localBtn);
 
     this->addChildAtPosition(navMenu, Anchor::Top, {0.f, -35.f}, false);
     navMenu->updateLayout();

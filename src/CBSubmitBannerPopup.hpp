@@ -7,10 +7,10 @@ using namespace geode::prelude;
 
 class CBSubmitBannerPopup : public geode::Popup {
 public:
-    static CBSubmitBannerPopup* create();
+    static CBSubmitBannerPopup* create(bool isLocal = false);
 
 private:
-    bool init();
+    bool init(bool isLocal);
     void onPickFile(CCObject*);
     void onSubmit(CCObject*);
     void onToggleLimited(CCObject*);
@@ -26,4 +26,5 @@ private:
     CCMenuItemSpriteExtra* m_previewBtn = nullptr;
 
     std::string m_selectedFilePath;
+    bool m_isLocal = false;
 };

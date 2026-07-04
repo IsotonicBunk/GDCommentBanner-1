@@ -21,6 +21,7 @@ struct CBBannerItem {
     int amount = 0;
     int totalBought = 0;
     int equippedCount = 0;
+    bool isLocal = false;
 };
 
 class CBBannerCell : public cocos2d::CCLayer, public UploadPopupDelegate {
