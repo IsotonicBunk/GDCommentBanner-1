@@ -280,7 +280,7 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
             int levelId = level->m_levelID;
             auto accountData = argon::getGameAccountData();
 
-            arc::spawn([endLayer, accountId, accountData, levelId]() -> arc::Future<> {
+            arc::spawn([accountId, accountData, levelId]() -> arc::Future<> {
                 auto authResult = co_await comment::argonToken(accountData);
                 if (authResult.empty()) {
                     log::warn("argon auth failed for amethyst reward");

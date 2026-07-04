@@ -23,7 +23,7 @@ namespace comment {
             return node;
         }
 
-        auto sprite = LazySprite::create(bannerSize, true);
+        Ref<LazySprite> sprite = LazySprite::create(bannerSize, true);
         sprite->setAutoResize(true);
 
         if (imageUrl.starts_with("http")) {

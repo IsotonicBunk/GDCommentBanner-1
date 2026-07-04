@@ -26,11 +26,11 @@ void checkAndShowBadge(const alpha::badgify::Badge& badge, bool isAdminBadge) {
         return;
     }
 
-    arc::spawn([badge, targetAccountId, isAdminBadge]() -> arc::Future<> {
-        auto accountData = argon::getGameAccountData();
-        int accountId = accountData.accountId;
-        if (accountId <= 0) co_return;
+    auto accountData = argon::getGameAccountData();
+    int accountId = accountData.accountId;
+    if (accountId <= 0) return;
 
+    arc::spawn([badge, targetAccountId, isAdminBadge, accountData, accountId]() -> arc::Future<> {
         auto authResult = co_await comment::argonToken(accountData);
         if (authResult.empty()) co_return;
 

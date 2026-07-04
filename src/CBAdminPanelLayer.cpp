@@ -142,12 +142,10 @@ void CBAdminPanelLayer::processPendingBanner(int id, bool approve, const std::st
     popup->show();
     arc::spawn([this, id, accountId, endpoint, reason, approve, popup]() -> arc::Future<> {
         auto req = geode::utils::web::WebRequest();
-        auto body = matjson::makeObject({
-            {"accountId", accountId},
+        auto body = matjson::makeObject({{"accountId", accountId},
             {"argonToken", this->m_authToken},
             {"id", id},
-            {"reason", reason}
-        });
+            {"reason", reason}});
         auto res = co_await req.bodyJSON(body).post(fmt::format("{}{}", comment::baseUrl, endpoint));
         bool ok = res.ok();
         geode::queueInMainThread([this, popup, ok, approve] {
@@ -645,7 +643,7 @@ void CBAdminPanelLayer::renderPage() {
             }
 
             if (!equippedBannerUrl.empty()) {
-                auto sprite = LazySprite::create({380.f, 40.f}, true);
+                Ref<LazySprite> sprite = LazySprite::create({380.f, 40.f}, true);
                 sprite->setAutoResize(true);
                 sprite->setPosition({190.f, 20.f});
                 sprite->loadFromUrl(equippedBannerUrl, LazySprite::Format::kFmtWebp, false);
@@ -757,7 +755,7 @@ void CBAdminPanelLayer::renderPage() {
             }
 
             // Image
-            auto sprite = LazySprite::create({344.f, 104.f}, true);
+            Ref<LazySprite> sprite = LazySprite::create({344.f, 104.f}, true);
             sprite->setAutoResize(true);
             sprite->setPosition({width / 2.f, cellHeight - 30.f});
             if (!imageUrl.empty()) {

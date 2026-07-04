@@ -26,7 +26,7 @@ bool CBPendingBannerReasonPopup::init(int bannerId, bool isReject, CBAdminPanelL
 
     m_reasonInput = TextInput::create(260.f, "Enter reason here...");
     m_reasonInput->setCommonFilter(CommonFilter::Any);
-    m_reasonInput->setLabel(isReject ? "Reason for Rejection (Required):" : "Reason for Approval (Optional):");
+    m_reasonInput->setLabel(isReject ? "Reason for Rejection:" : "Reason for Approval:");
     m_reasonInput->setMaxCharCount(150);
     m_mainLayer->addChildAtPosition(m_reasonInput, Anchor::Center, {0.f, 0.f});
 
@@ -40,11 +40,6 @@ bool CBPendingBannerReasonPopup::init(int bannerId, bool isReject, CBAdminPanelL
 
 void CBPendingBannerReasonPopup::onConfirm(CCObject* sender) {
     std::string reason = m_reasonInput->getString();
-    if (m_isReject && reason.empty()) {
-        Notification::create("A reason is required when rejecting a banner.", NotificationIcon::Error)->show();
-        return;
-    }
-
     m_adminPanel->processPendingBanner(m_bannerId, !m_isReject, reason);
     this->onClose(nullptr);
 }

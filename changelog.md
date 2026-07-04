@@ -1,6 +1,10 @@
 ## v0.1.7-beta.1
 
 - Hotfix the amount text input not align correctly when limited is toggled
+- Fixed any mishandled argon authorization
+- Fixed any mishandled background coroutine ruuning in the worker threads
+- Fixed issue where loading badge in the profile page crashes the game
+- Reason for approving/rejecting pending banners are now optional
 
 ## v0.1.6-beta.1
 
