@@ -9,6 +9,7 @@
 #include "include/CBLocalBanner.hpp"
 #include "CBLocalBannersPopup.hpp"
 #include <Geode/utils/file.hpp>
+#include <Geode/ui/NineSlice.hpp>
 #include <algorithm>
 #include <unordered_set>
 
@@ -253,14 +254,6 @@ void CBSubmitBannerPopup::onSubmit(CCObject*) {
         return;
     }
 
-    int currentAmethysts = Mod::get()->getSavedValue<int>("amethyst", 0);
-    bool hasCreatedBanner = Mod::get()->getSavedValue<bool>("has_created_banner", false);
-    if (currentAmethysts < 15000 && hasCreatedBanner) {
-        int needed = 15000 - currentAmethysts;
-        geode::Notification::create(fmt::format("Not enough amethysts! You need {} more.", needed), geode::NotificationIcon::Error)->show();
-        return;
-    }
-
     if (m_selectedFilePath.empty()) {
         geode::Notification::create("Please select an image file.", geode::NotificationIcon::Error)->show();
         return;
@@ -275,7 +268,30 @@ void CBSubmitBannerPopup::onSubmit(CCObject*) {
         return;
     }
 
-    geode::createQuickPopup("Submit Banner", "Are you sure you want to submit this banner? You <cr>cannot change it</c> after it's uploaded.", "Cancel", "Submit", [this, isLimited](FLAlertLayer*, bool btn2) {
+    int priceVal = numFromString<int>(m_priceInput->getString()).unwrapOr(0);
+    int multiplier = ((priceVal - 1) / 100000) + 1;
+    if (multiplier < 1) multiplier = 1;
+    int submissionFee = 15000 * multiplier;
+    bool hasCreatedBanner = Mod::get()->getSavedValue<bool>("has_created_banner", false);
+    if (!hasCreatedBanner) {
+        submissionFee = std::max(0, submissionFee - 15000);
+    }
+
+    int currentAmethysts = Mod::get()->getSavedValue<int>("amethyst", 0);
+    if (currentAmethysts < submissionFee) {
+        int needed = submissionFee - currentAmethysts;
+        geode::Notification::create(fmt::format("Not enough amethysts! You need {} more.", needed), geode::NotificationIcon::Error)->show();
+        return;
+    }
+
+    std::string popupTitle = "Submit Banner";
+    std::string popupMsg = "Are you sure you want to submit this banner? You <cr>cannot change it</c> after it's uploaded.";
+    if (priceVal > 100000) {
+        popupTitle = "Increased Submission Fee";
+        popupMsg = fmt::format("Because this banner's price is higher than <cp>100,000 amethysts</c>, there is an increased submission fee of <cy>{} amethysts</c>.\nAre you sure you want to proceed? You <cr>cannot change it</c> after it's uploaded.", GameToolbox::pointsToString(submissionFee));
+    }
+
+    geode::createQuickPopup(popupTitle.c_str(), popupMsg, "Cancel", "Submit", [this, isLimited, submissionFee](FLAlertLayer*, bool btn2) {
         if (!btn2) return;
 
         Ref<UploadActionPopup> popup = UploadActionPopup::create(nullptr, "Submitting banner...");
@@ -296,7 +312,7 @@ void CBSubmitBannerPopup::onSubmit(CCObject*) {
         }
 
         Ref<CBSubmitBannerPopup> retainedSelf = this;
-        arc::spawn([retainedSelf, accountId, accountData, name, desc, price, amount, isLimited, filePath, popup]() -> arc::Future<> {
+        arc::spawn([retainedSelf, accountId, accountData, name, desc, price, amount, isLimited, filePath, popup, submissionFee]() -> arc::Future<> {
             auto authResult = co_await comment::argonToken(accountData);
             if (authResult.empty()) {
                 geode::queueInMainThread([popup] {
@@ -347,13 +363,14 @@ void CBSubmitBannerPopup::onSubmit(CCObject*) {
                 co_return;
             }
 
-            geode::queueInMainThread([popup, retainedSelf] {
+            geode::queueInMainThread([popup, retainedSelf, submissionFee] {
                 bool hasCreatedBanner = Mod::get()->getSavedValue<bool>("has_created_banner", false);
                 if (!hasCreatedBanner) {
                     Mod::get()->setSavedValue("has_created_banner", true);
-                } else {
+                }
+                if (submissionFee > 0) {
                     int current = Mod::get()->getSavedValue<int>("amethyst", 0);
-                    int newAmethyst = std::max(0, current - 15000);
+                    int newAmethyst = std::max(0, current - submissionFee);
                     Mod::get()->setSavedValue("amethyst", newAmethyst);
                     if (auto shopLayer = CBShopLayer::getInstance()) {
                         shopLayer->updateAmethystLabel(newAmethyst);
@@ -388,9 +405,69 @@ void CBSubmitBannerPopup::onPreview(CCObject*) {
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-    auto image = comment::createBannerNode(m_selectedFilePath, {424.f, 204.f});
-    image->setPosition(winSize / 2);
-    blockLayer->addChild(image);
+    auto createPreviewNode = [](std::string const& filePath, CCSize const& size) -> CCNode* {
+        auto clip = CCClippingNode::create();
+        clip->setContentSize(size);
+        clip->setAnchorPoint({0.5f, 0.5f});
+        //clip->setAlphaThreshold(0.01f);
+
+        auto stencil = CCLayerColor::create(ccColor4B{255, 255, 255, 255}, size.width, size.height);
+        clip->setStencil(stencil);
+
+        auto bg = NineSlice::create("square02_small.png");
+        bg->setContentSize(size);
+        bg->setPosition(size / 2.f);
+        bg->setOpacity(100);
+        clip->addChild(bg);
+
+        auto image = comment::createBannerNode(filePath, size);
+        image->setPosition(size / 2.f);
+        if (auto lazy = static_cast<LazySprite*>(image)) {
+            lazy->setAutoResize(false);
+            auto applyScale = [lazy, size]() {
+                if (!lazy->getTexture()) return;
+                auto texSize = lazy->getTexture()->getContentSize();
+                if (texSize.width <= 0 || texSize.height <= 0) return;
+                float scale = std::max(size.width / texSize.width, size.height / texSize.height);
+                lazy->setScale(scale);
+            };
+            if (lazy->isLoaded()) {
+                applyScale();
+            }
+            lazy->setLoadCallback([applyScale](auto) {
+                applyScale();
+            });
+        }
+        clip->addChild(image);
+
+        return clip;
+    };
+
+    auto container = CCNode::create();
+    container->setContentSize({340.f, 160.f});
+    container->setAnchorPoint({0.5f, 0.5f});
+    container->setPosition(winSize / 2);
+    container->setLayout(ColumnLayout::create()
+            ->setGap(8.f)
+            ->setAutoScale(false)
+            ->setAxisAlignment(AxisAlignment::Center));
+
+    auto nonCompactPreview = createPreviewNode(m_selectedFilePath, {340.f, 80.f});
+    container->addChild(nonCompactPreview);
+
+    auto nonCompactLabel = CCLabelBMFont::create("Non-Compact Mode", "goldFont.fnt");
+    nonCompactLabel->setScale(0.45f);
+    container->addChild(nonCompactLabel);
+
+    auto compactPreview = createPreviewNode(m_selectedFilePath, {340.f, 36.f});
+    container->addChild(compactPreview);
+
+    auto compactLabel = CCLabelBMFont::create("Compact Mode", "goldFont.fnt");
+    compactLabel->setScale(0.45f);
+    container->addChild(compactLabel);
+
+    container->updateLayout();
+    blockLayer->addChild(container);
 
     this->addChild(blockLayer);
 }

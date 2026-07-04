@@ -9,6 +9,8 @@
 
 - Added **Local Banners**, you can apply your own banners locally
 - Added **Approve/Reject Reason** on the pending banners for Staff/Admins
+- Submission Fee will **increase** when surpasses **100k** of the banner price
+- Added Preview for Compact and Non-Compact mode
 
 ## v0.1.5-beta.1
 

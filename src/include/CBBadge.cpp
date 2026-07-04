@@ -62,7 +62,7 @@ void checkAndShowBadge(const alpha::badgify::Badge& badge, bool isAdminBadge) {
 $execute {
     alpha::badgify::registerBadge(
         "cb-admin"_spr,
-        "Comment Banner Admin",
+        "Comment Banners Admin",
         "This user is an <cr>Administrator</c> for <cp>Comment Banners</c>. They have the ability to <co>delete/modify</c> banners as well as <cg>promote users to Staff</c>",
         [](const alpha::badgify::Badge& badge) {
             checkAndShowBadge(badge, true);
@@ -70,7 +70,7 @@ $execute {
 
     alpha::badgify::registerBadge(
         "cb-staff"_spr,
-        "Comment Banner Staff",
+        "Comment Banners Staff",
         "This user is a <cg>Staff</c> for <cp>Comment Banners</c>. They have the ability to <cg>approve pending banners</c> and <cy>feature banners</c>",
         [](const alpha::badgify::Badge& badge) {
             checkAndShowBadge(badge, false);
