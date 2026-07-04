@@ -77,7 +77,7 @@ bool CBViewItemPopup::init(const CBBannerItem& banner) {
 
     auto priceNode = CCNode::create();
     priceNode->setScale(0.5f);
-    priceNode->setContentSize({400.f, 30.f});
+    priceNode->setContentSize({180.f, 30.f});
     priceNode->setLayout(RowLayout::create()->setAxisAlignment(AxisAlignment::Start)->setGap(5));
     priceNode->setAnchorPoint({0.f, 0.f});
     auto priceLabel = CCLabelBMFont::create(fmt::format("{}", GameToolbox::pointsToString(m_banner.price)).c_str(), "bigFont.fnt");

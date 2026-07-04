@@ -461,7 +461,7 @@ void CBAdminPanelLayer::renderPage() {
             if (isFeatured) {
                 if (auto starIcon = CCSprite::createWithSpriteFrameName("GJ_sStarsIcon_001.png")) {
                     starIcon->setScale(0.8f);
-                    starIcon->setPosition({nameX, 25.f});
+                    starIcon->setPosition({nameX, 20.f});
                     starIcon->setAnchorPoint({0.f, 0.5f});
                     cell->addChild(starIcon);
                     nameX += starIcon->getContentSize().width * starIcon->getScale() + 4.f;
@@ -470,7 +470,7 @@ void CBAdminPanelLayer::renderPage() {
             if (isLimited) {
                 if (auto limitIcon = CCSprite::createWithSpriteFrameName("GJ_sRecentIcon_001.png")) {
                     limitIcon->setScale(0.8f);
-                    limitIcon->setPosition({nameX, 25.f});
+                    limitIcon->setPosition({nameX, 20.f});
                     limitIcon->setAnchorPoint({0.f, 0.5f});
                     cell->addChild(limitIcon);
                     nameX += limitIcon->getContentSize().width * limitIcon->getScale() + 4.f;
@@ -493,7 +493,7 @@ void CBAdminPanelLayer::renderPage() {
                     CCTintTo::create(1.f, 255, 255, 255),
                     nullptr)));
             }
-            nameLabel->setPosition({nameX, 25.f});
+            nameLabel->setPosition({nameX, 20.f});
             nameLabel->limitLabelWidth(60.f, 0.5f, 0.2f);
             cell->addChild(nameLabel);
 
@@ -508,7 +508,7 @@ void CBAdminPanelLayer::renderPage() {
                     CBProfileBannerPopup::create(targetAccountId, user)->show();
                 });
                 userBtn->setAnchorPoint({0.f, 0.5f});
-                userBtn->setPosition({currentX, 25.f});
+                userBtn->setPosition({currentX, 20.f});
                 cell->addChild(userBtn);
 
                 currentX += (usernameLabel->getContentSize().width * usernameLabel->getScale()) + 15.f;
@@ -523,7 +523,7 @@ void CBAdminPanelLayer::renderPage() {
                 priceLabel->setPosition({0.f, 0.f});
 
                 auto priceNode = CCNode::create();
-                priceNode->setPosition({currentX, 25.f});
+                priceNode->setPosition({currentX, 20.f});
                 priceNode->addChild(priceLabel);
 
                 if (auto amethystIcon = CCSprite::createWithSpriteFrameName("CB_amethyst_002.png"_spr)) {
@@ -553,11 +553,11 @@ void CBAdminPanelLayer::renderPage() {
             // Description
             if (!desc.empty()) {
                 if (auto descBtn = geode::Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [desc](geode::Button*) {
-                    MDPopup::create("Description", desc, "OK")->show();
-                })) {
+                        MDPopup::create("Description", desc, "OK")->show();
+                    })) {
                     descBtn->setScale(0.6f);
                     descBtn->setAnchorPoint({0.f, 0.5f});
-                    descBtn->setPosition({currentX, 25.f});
+                    descBtn->setPosition({currentX, 20.f});
                     cell->addChild(descBtn);
                     currentX += (descBtn->getContentSize().width * descBtn->getScale()) + 15.f;
                 }
@@ -565,7 +565,7 @@ void CBAdminPanelLayer::renderPage() {
 
             auto menu = CCMenu::create();
             menu->setContentSize({70.f, 30.f});
-            menu->setPosition({335.f, 25.f});
+            menu->setPosition({335.f, 20.f});
             menu->setLayout(RowLayout::create()
                     ->setAxisAlignment(AxisAlignment::Center)
                     ->setGap(5.f));
@@ -770,7 +770,7 @@ void CBAdminPanelLayer::renderPage() {
             if (isFeatured) {
                 if (auto starIcon = CCSprite::createWithSpriteFrameName("GJ_sStarsIcon_001.png")) {
                     starIcon->setScale(0.8f);
-                    starIcon->setPosition({nameX, 25.f});
+                    starIcon->setPosition({nameX, 20.f});
                     starIcon->setAnchorPoint({0.f, 0.5f});
                     cell->addChild(starIcon);
                     nameX += starIcon->getContentSize().width * starIcon->getScale() + 4.f;
@@ -779,7 +779,7 @@ void CBAdminPanelLayer::renderPage() {
             if (isLimited) {
                 if (auto limitIcon = CCSprite::createWithSpriteFrameName("GJ_sRecentIcon_001.png")) {
                     limitIcon->setScale(0.8f);
-                    limitIcon->setPosition({nameX, 25.f});
+                    limitIcon->setPosition({nameX, 20.f});
                     limitIcon->setAnchorPoint({0.f, 0.5f});
                     cell->addChild(limitIcon);
                     nameX += limitIcon->getContentSize().width * limitIcon->getScale() + 4.f;
@@ -802,7 +802,7 @@ void CBAdminPanelLayer::renderPage() {
                     CCTintTo::create(1.f, 255, 255, 255),
                     nullptr)));
             }
-            nameLabel->setPosition({nameX, 25.f});
+            nameLabel->setPosition({nameX, 20.f});
             nameLabel->limitLabelWidth(100.f, 0.5f, 0.2f);
             cell->addChild(nameLabel);
 
@@ -817,7 +817,7 @@ void CBAdminPanelLayer::renderPage() {
                     CBProfileBannerPopup::create(targetAccountId, user)->show();
                 });
                 userBtn->setAnchorPoint({0.f, 0.5f});
-                userBtn->setPosition({currentX, 25.f});
+                userBtn->setPosition({currentX, 20.f});
                 cell->addChild(userBtn);
 
                 currentX += (usernameLabel->getContentSize().width * usernameLabel->getScale()) + 15.f;
@@ -828,11 +828,11 @@ void CBAdminPanelLayer::renderPage() {
             // Description
             if (!desc.empty()) {
                 if (auto descBtn = geode::Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [desc](geode::Button*) {
-                    MDPopup::create("Description", desc, "OK")->show();
-                })) {
+                        MDPopup::create("Description", desc, "OK")->show();
+                    })) {
                     descBtn->setScale(0.6f);
                     descBtn->setAnchorPoint({0.f, 0.5f});
-                    descBtn->setPosition({currentX, 25.f});
+                    descBtn->setPosition({currentX, 20.f});
                     cell->addChild(descBtn);
                     currentX += (descBtn->getContentSize().width * descBtn->getScale()) + 15.f;
                 }
@@ -840,7 +840,7 @@ void CBAdminPanelLayer::renderPage() {
 
             auto menu = CCMenu::create();
             menu->setContentSize({100.f, 30.f});
-            menu->setPosition({320.f, 25.f});
+            menu->setPosition({320.f, 20.f});
             menu->setLayout(RowLayout::create()
                     ->setAxisAlignment(AxisAlignment::Center)
                     ->setGap(5.f));

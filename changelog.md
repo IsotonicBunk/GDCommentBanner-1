@@ -2,6 +2,9 @@
 
 - Fixed issue where amethysts reward given even when the level is already beaten
 - Added Profile Button on the User Banners on the top right of the popup
+- Added Badge for **Admin** and **Staff** using [Badgify API](mod:alphalaneous.badgify)
+
+<mod:alphalaneous.badgify>
 
 ## v0.1.5-beta.1
 

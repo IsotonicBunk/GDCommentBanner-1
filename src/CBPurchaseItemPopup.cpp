@@ -37,22 +37,25 @@ bool CBPurchaseItemPopup::init(const CBBannerItem& banner) {
     if (m_closeBtn) m_closeBtn->removeFromParent();
 
     auto priceNode = CCNode::create();
+    priceNode->setScale(0.5f);
+    priceNode->setContentSize({300.f, 30.f});
+    priceNode->setAnchorPoint({0.5f, 0.5f});
+    priceNode->setLayout(RowLayout::create()->setAxisAlignment(AxisAlignment::Center)->setGap(5));
 
     auto priceLabel = CCLabelBMFont::create(fmt::format("{}", GameToolbox::pointsToString(m_banner.price)).c_str(), "bigFont.fnt");
     if (priceLabel) {
         priceLabel->setAnchorPoint({1.f, 0.5f});
-        priceLabel->setPosition({10.f, 0.f});
-        priceLabel->setScale(0.45f);
+        priceLabel->limitLabelWidth(150.f, 0.45f, 0.2f);
         priceNode->addChild(priceLabel);
 
         if (auto amethystIcon = CCSprite::createWithSpriteFrameName("CB_amethyst_002.png"_spr)) {
             amethystIcon->setAnchorPoint({0.f, 0.5f});
             amethystIcon->setScale(0.5f);
-            amethystIcon->setPosition({15, 0.f});
             priceNode->addChild(amethystIcon);
         }
 
         m_mainLayer->addChildAtPosition(priceNode, Anchor::Top, {0.f, -45.f}, false);
+        priceNode->updateLayout();
     }
 
     if (!m_banner.imageUrl.empty()) {
