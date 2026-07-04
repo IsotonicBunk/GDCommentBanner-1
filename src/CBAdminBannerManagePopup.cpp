@@ -148,22 +148,20 @@ void CBAdminBannerManagePopup::onSave(CCObject*) {
         auto authToken = std::move(authResult);
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-
-        std::string body = fmt::format("accountId={}&argonToken={}&bannerId={}&price={}&name={}&description={}",
-            accountId,
-            authToken,
-            bannerId,
-            newPrice,
-            newName,
-            newDesc);
-
+        auto body = matjson::makeObject({
+            {"accountId", accountId},
+            {"argonToken", authToken},
+            {"bannerId", bannerId},
+            {"price", newPrice},
+            {"name", newName},
+            {"description", newDesc},
+            {"isFeatured", isFeatured}
+        });
         if (hasAmount) {
-            body += fmt::format("&amount={}", newAmount);
+            body["amount"] = newAmount;
         }
-        body += fmt::format("&isFeatured={}", isFeatured ? "true" : "false");
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/updateBannerDetails", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/updateBannerDetails", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([retainedSelf, popup, ok] {
@@ -200,9 +198,12 @@ void CBAdminBannerManagePopup::onDelete(CCObject*) {
                 auto authToken = std::move(authResult);
 
                 auto req = geode::utils::web::WebRequest();
-                req.header("Content-Type", "application/x-www-form-urlencoded");
-                std::string body = fmt::format("accountId={}&argonToken={}&bannerId={}", accountId, authToken, bannerId);
-                auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/deleteBanner", comment::baseUrl));
+                auto body = matjson::makeObject({
+                    {"accountId", accountId},
+                    {"argonToken", authToken},
+                    {"bannerId", bannerId}
+                });
+                auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/deleteBanner", comment::baseUrl));
                 bool ok = res.ok();
 
                 geode::queueInMainThread([retainedSelf, popup, ok] {

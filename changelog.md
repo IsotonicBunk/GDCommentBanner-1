@@ -8,6 +8,7 @@
 <mod:alphalaneous.badgify>
 
 - Added **Local Banners**, you can apply your own banners locally
+- Added **Approve/Reject Reason** on the pending banners for Staff/Admins
 
 ## v0.1.5-beta.1
 

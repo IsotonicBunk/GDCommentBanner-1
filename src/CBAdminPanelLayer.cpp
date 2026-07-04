@@ -14,6 +14,9 @@
 #include "CBAdminBannerManagePopup.hpp"
 #include <Geode/ui/Scrollbar.hpp>
 #include <Geode/ui/MDPopup.hpp>
+#include <Geode/ui/TextInput.hpp>
+#include <Geode/binding/FLAlertLayer.hpp>
+#include "CBPendingBannerReasonPopup.hpp"
 
 using namespace geode::prelude;
 
@@ -128,6 +131,35 @@ void CBAdminPanelLayer::onTabBanners(CCObject*) {
     m_currentTab = Tab::Banners;
     m_filterBtn->setVisible(true);
     fetchBanners();
+}
+
+void CBAdminPanelLayer::processPendingBanner(int id, bool approve, const std::string& reason) {
+    auto accountId = argon::getGameAccountData().accountId;
+    std::string actionStr = approve ? "Approving banner..." : "Rejecting banner...";
+    std::string endpoint = approve ? "/approveBanner" : "/rejectBanner";
+
+    Ref<UploadActionPopup> popup = UploadActionPopup::create(nullptr, actionStr);
+    popup->show();
+    arc::spawn([this, id, accountId, endpoint, reason, approve, popup]() -> arc::Future<> {
+        auto req = geode::utils::web::WebRequest();
+        auto body = matjson::makeObject({
+            {"accountId", accountId},
+            {"argonToken", this->m_authToken},
+            {"id", id},
+            {"reason", reason}
+        });
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}{}", comment::baseUrl, endpoint));
+        bool ok = res.ok();
+        geode::queueInMainThread([this, popup, ok, approve] {
+            if (ok) {
+                popup->showSuccessMessage(approve ? "Banner approved!" : "Banner rejected!");
+                this->fetchPendingBanners();
+            } else {
+                popup->showFailMessage(approve ? "Failed to approve banner." : "Failed to reject banner.");
+            }
+        });
+        co_return;
+    });
 }
 
 void CBAdminPanelLayer::fetchPendingBanners() {
@@ -574,25 +606,10 @@ void CBAdminPanelLayer::renderPage() {
             approveSpr->setScale(0.8f);
             auto approveBtn = geode::Button::createWithNode(
                 approveSpr,
-                [this, id, accountId](geode::Button*) {
-                    Ref<UploadActionPopup> popup = UploadActionPopup::create(nullptr, "Approving banner...");
-                    popup->show();
-                    arc::spawn([this, id, accountId, popup]() -> arc::Future<> {
-                        auto req = geode::utils::web::WebRequest();
-                        req.header("Content-Type", "application/x-www-form-urlencoded");
-                        std::string body = fmt::format("accountId={}&argonToken={}&id={}", accountId, this->m_authToken, id);
-                        auto res = co_await req.bodyString(body).post(fmt::format("{}/approveBanner", comment::baseUrl));
-                        bool ok = res.ok();
-                        geode::queueInMainThread([this, popup, ok] {
-                            if (ok) {
-                                popup->showSuccessMessage("Banner approved!");
-                                this->fetchPendingBanners();
-                            } else {
-                                popup->showFailMessage("Failed to approve banner.");
-                            }
-                        });
-                        co_return;
-                    });
+                [this, id](geode::Button*) {
+                    if (auto popup = CBPendingBannerReasonPopup::create(id, false, this)) {
+                        popup->show();
+                    }
                 });
             approveBtn->setPosition({-35.f, 0.f});
             menu->addChild(approveBtn);
@@ -601,25 +618,10 @@ void CBAdminPanelLayer::renderPage() {
             rejectSpr->setScale(0.8f);
             auto rejectBtn = geode::Button::createWithNode(
                 rejectSpr,
-                [this, id, accountId](geode::Button*) {
-                    Ref<UploadActionPopup> popup = UploadActionPopup::create(nullptr, "Rejecting banner...");
-                    popup->show();
-                    arc::spawn([this, id, accountId, popup]() -> arc::Future<> {
-                        auto req = geode::utils::web::WebRequest();
-                        req.header("Content-Type", "application/x-www-form-urlencoded");
-                        std::string body = fmt::format("accountId={}&argonToken={}&id={}", accountId, this->m_authToken, id);
-                        auto res = co_await req.bodyString(body).post(fmt::format("{}/rejectBanner", comment::baseUrl));
-                        bool ok = res.ok();
-                        geode::queueInMainThread([this, popup, ok] {
-                            if (ok) {
-                                popup->showSuccessMessage("Banner rejected!");
-                                this->fetchPendingBanners();
-                            } else {
-                                popup->showFailMessage("Failed to reject banner.");
-                            }
-                        });
-                        co_return;
-                    });
+                [this, id](geode::Button*) {
+                    if (auto popup = CBPendingBannerReasonPopup::create(id, true, this)) {
+                        popup->show();
+                    }
                 });
             rejectBtn->setPosition({35.f, 0.f});
             menu->addChild(rejectBtn);

@@ -133,14 +133,14 @@ void CBManageUserPopup::onUpdateAmethyst(CCObject*) {
         }
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-        std::string body = fmt::format("accountId={}&argonToken={}&targetAccountId={}&amethyst={}",
-            adminId,
-            authResult,
-            retainedSelf->m_targetAccountId,
-            amy);
+        auto body = matjson::makeObject({
+            {"accountId", adminId},
+            {"argonToken", authResult},
+            {"targetAccountId", retainedSelf->m_targetAccountId},
+            {"amethyst", amy}
+        });
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/updateUserAmethyst", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/updateUserAmethyst", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([popup, ok] {
@@ -175,13 +175,13 @@ void CBManageUserPopup::onToggleStaff(CCObject* sender) {
         }
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-        std::string body = fmt::format("accountId={}&argonToken={}&targetAccountId={}",
-            adminId,
-            authResult,
-            retainedSelf->m_targetAccountId);
+        auto body = matjson::makeObject({
+            {"accountId", adminId},
+            {"argonToken", authResult},
+            {"targetAccountId", retainedSelf->m_targetAccountId}
+        });
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/toggleStaff", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/toggleStaff", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([retainedSelf, popup, ok, toggler] {
@@ -219,14 +219,14 @@ void CBManageUserPopup::onTempBan(CCObject*) {
         }
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-        std::string body = fmt::format("accountId={}&argonToken={}&targetAccountId={}&hours={}",
-            adminId,
-            authResult,
-            retainedSelf->m_targetAccountId,
-            hours);
+        auto body = matjson::makeObject({
+            {"accountId", adminId},
+            {"argonToken", authResult},
+            {"targetAccountId", retainedSelf->m_targetAccountId},
+            {"hours", hours}
+        });
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/tempBan", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/tempBan", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([popup, ok] {
@@ -411,13 +411,13 @@ void CBManageUserPopup::deleteBanner(int bannerId) {
         }
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-        std::string body = fmt::format("accountId={}&argonToken={}&bannerId={}",
-            accountData.accountId,
-            authResult,
-            bannerId);
+        auto body = matjson::makeObject({
+            {"accountId", accountData.accountId},
+            {"argonToken", authResult},
+            {"bannerId", bannerId}
+        });
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/deleteBanner", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/deleteBanner", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([retainedSelf, popup, ok] {
@@ -446,16 +446,16 @@ void CBManageUserPopup::updateBannerDetails(int bannerId, std::string name, std:
         }
 
         auto req = geode::utils::web::WebRequest();
-        req.header("Content-Type", "application/x-www-form-urlencoded");
-        std::string body = fmt::format("accountId={}&argonToken={}&bannerId={}&price={}&name={}&description={}",
-            accountData.accountId,
-            authResult,
-            bannerId,
-            price,
-            name,
-            description);
+        auto body = matjson::makeObject({
+            {"accountId", accountData.accountId},
+            {"argonToken", authResult},
+            {"bannerId", bannerId},
+            {"price", price},
+            {"name", name},
+            {"description", description}
+        });
 
-        auto res = co_await req.bodyString(body).post(fmt::format("{}/admin/updateBannerDetails", comment::baseUrl));
+        auto res = co_await req.bodyJSON(body).post(fmt::format("{}/admin/updateBannerDetails", comment::baseUrl));
         bool ok = res.ok();
 
         geode::queueInMainThread([retainedSelf, popup, ok] {

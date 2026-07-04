@@ -12,6 +12,7 @@ using namespace geode::prelude;
 class CBAdminPanelLayer : public geode::Popup, public SetTextPopupDelegate {
 public:
     static CBAdminPanelLayer* create();
+    void processPendingBanner(int id, bool approve, const std::string& reason);
 
 private:
     bool init() override;
