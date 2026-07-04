@@ -5,6 +5,7 @@
 - Fixed mishandled background coroutines running in the worker threads
 - Fixed issue where loading badge in the profile page crashes the game
 - Reason for approving/rejecting pending banners are now optional
+- Added **Disable Reward Animation** in the mod settings
 
 ## v0.1.6-beta.1
 

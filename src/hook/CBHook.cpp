@@ -396,7 +396,7 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
                             rewardLayer->m_mainNode->updateLayout();
                         }
 
-                        if (layerRef) {
+                        if (layerRef && !Mod::get()->getSettingValue<bool>("disable-reward-animation")) {
                             layerRef->addChild(rewardLayer, 100);
                         }
                     }

@@ -36,6 +36,12 @@
 			"default": 24,
 			"min": 1,
 			"max": 168
+		},
+		"disable-reward-animation": {
+			"name": "Disable Reward Animation",
+			"description": "Disables the reward animation when beated a rated level.",
+			"type": "bool",
+			"default": false
 		}
 	},
 	"tags": ["online", "customization", "content"]

@@ -2,6 +2,7 @@
 #include <alphalaneous.badgify/include/Badgify.hpp>
 #include "CBConstant.hpp"
 #include <unordered_map>
+#include <vector>
 
 using namespace geode::prelude;
 
@@ -11,8 +12,14 @@ struct RoleCache {
 };
 static std::unordered_map<int, RoleCache> s_roleCache;
 
+struct PendingBadge {
+    alpha::badgify::Badge badge;
+    bool isAdminBadge;
+};
+static std::unordered_map<int, std::vector<PendingBadge>> s_pendingBadges;
+
 void checkAndShowBadge(const alpha::badgify::Badge& badge, bool isAdminBadge) {
-    if (!badge.user) return;
+    if (!badge.user || !badge.target) return;
     int targetAccountId = badge.user->m_accountID;
     if (targetAccountId <= 0) return;
 
@@ -30,30 +37,56 @@ void checkAndShowBadge(const alpha::badgify::Badge& badge, bool isAdminBadge) {
     int accountId = accountData.accountId;
     if (accountId <= 0) return;
 
-    arc::spawn([badge, targetAccountId, isAdminBadge, accountData, accountId]() -> arc::Future<> {
+    bool alreadyPending = s_pendingBadges.contains(targetAccountId);
+    s_pendingBadges[targetAccountId].push_back({badge, isAdminBadge});
+    if (alreadyPending) return;
+
+    arc::spawn([targetAccountId, accountData, accountId]() -> arc::Future<> {
         auto authResult = co_await comment::argonToken(accountData);
-        if (authResult.empty()) co_return;
+        if (authResult.empty()) {
+            geode::queueInMainThread([targetAccountId]() {
+                s_pendingBadges.erase(targetAccountId);
+            });
+            co_return;
+        }
 
         auto req = geode::utils::web::WebRequest();
         auto body = matjson::makeObject({{"accountId", accountId},
             {"argonToken", authResult},
             {"targetAccountId", targetAccountId}});
         auto response = co_await req.bodyJSON(body).post(fmt::format("{}/getUser", comment::baseUrl));
-        if (!response.ok()) co_return;
+        if (!response.ok()) {
+            geode::queueInMainThread([targetAccountId]() {
+                s_pendingBadges.erase(targetAccountId);
+            });
+            co_return;
+        }
         auto jsonRes = response.json();
-        if (jsonRes.isErr()) co_return;
+        if (jsonRes.isErr()) {
+            geode::queueInMainThread([targetAccountId]() {
+                s_pendingBadges.erase(targetAccountId);
+            });
+            co_return;
+        }
         auto json = jsonRes.unwrap();
 
         RoleCache roles;
         roles.isAdmin = json["is_admin"].asBool().unwrapOr(false);
         roles.isStaff = json["is_staff"].asBool().unwrapOr(false);
 
-        geode::queueInMainThread([badge, targetAccountId, isAdminBadge, roles]() {
+        geode::queueInMainThread([targetAccountId, roles]() {
             s_roleCache[targetAccountId] = roles;
-            if (isAdminBadge && roles.isAdmin) {
-                alpha::badgify::showBadge(badge, CCSprite::createWithSpriteFrameName("CB_admin_badge.png"_spr));
-            } else if (!isAdminBadge && roles.isStaff) {
-                alpha::badgify::showBadge(badge, CCSprite::createWithSpriteFrameName("CB_staff_badge.png"_spr));
+            if (s_pendingBadges.contains(targetAccountId)) {
+                for (auto const& item : s_pendingBadges[targetAccountId]) {
+                    auto const& b = item.badge;
+                    if (!b.user || !b.target) continue;
+                    if (item.isAdminBadge && roles.isAdmin) {
+                        alpha::badgify::showBadge(b, CCSprite::createWithSpriteFrameName("CB_admin_badge.png"_spr));
+                    } else if (!item.isAdminBadge && roles.isStaff) {
+                        alpha::badgify::showBadge(b, CCSprite::createWithSpriteFrameName("CB_staff_badge.png"_spr));
+                    }
+                }
+                s_pendingBadges.erase(targetAccountId);
             }
         });
     });
