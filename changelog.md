@@ -1,3 +1,7 @@
+## v0.1.7-beta.1
+
+- Hotfix the amount text input not align correctly when limited is toggled
+
 ## v0.1.6-beta.1
 
 - Fixed issue where amethysts reward given even when the level is already beaten

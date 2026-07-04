@@ -152,6 +152,9 @@ void CBSubmitBannerPopup::onToggleLimited(CCObject* sender) {
     bool toggled = !static_cast<CCMenuItemToggler*>(sender)->isToggled();
     if (m_amountInput) {
         m_amountInput->setVisible(toggled);
+        if (auto parent = m_amountInput->getParent()) {
+            parent->updateLayout();
+        }
     }
 }
 
