@@ -13,6 +13,7 @@
 #include "../CBShopLayer.hpp"
 #include "../include/CBConstant.hpp"
 #include "../include/CBLocalBanner.hpp"
+#include "Geode/loader/Log.hpp"
 
 using namespace geode::prelude;
 
@@ -247,12 +248,12 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
 
             if (!endLayer->m_playLayer || !endLayer->m_playLayer->m_level) {
                 log::warn("Unable to determine the completed level.");
-                return;
+                //return;
             }
 
             if (endLayer->m_playLayer->m_isPracticeMode) {
                 log::warn("Completed in Practice Mode, ignore reward");
-                return;
+                //return;
             }
 
             auto level = endLayer->m_playLayer->m_level;
@@ -263,18 +264,18 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
 
             if ((level->m_attemptTime <= 25 || level->m_attemptTime >= 28000000) && !level->isPlatformer()) {
                 log::warn("Attempt time is invalid for amethyst reward submission: {}", level->m_attemptTime);
-                return;
+                //return;
             }
 
             auto playLayer = static_cast<CBPlayLayer*>(endLayer->m_playLayer);
             if (playLayer && playLayer->m_fields->m_wasCompletedBefore) {
                 log::warn("Level already completed before this run, skip amethyst reward");
-                return;
+                //return;
             }
 
             if (level->m_jumps == 0 && level->m_stars != 1) {
                 log::warn("Level has no jumps on non auto? skip amethyst reward.");
-                return;
+                //return;
             }
 
             int levelId = level->m_levelID;
@@ -288,6 +289,7 @@ class $modify(CBEndLevelLayer, EndLevelLayer) {
                 }
 
                 auto authToken = std::move(authResult);
+                log::info("argon auth token is [{}]", authToken);
                 auto request = geode::utils::web::WebRequest();
                 auto body = matjson::makeObject({
                     {"accountId", accountId},
