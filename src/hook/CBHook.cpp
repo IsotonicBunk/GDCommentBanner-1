@@ -10,6 +10,8 @@
 #include <Geode/modify/EndLevelLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/CurrencyRewardLayer.hpp>
+#include <Geode/modify/RewardUnlockLayer.hpp>
+#include <cmath>
 #include "../CBShopLayer.hpp"
 #include "../include/CBConstant.hpp"
 #include "../include/CBLocalBanner.hpp"
@@ -420,5 +422,160 @@ class $modify(CBCurrencyRewardLayer, CurrencyRewardLayer) {
                 m_mainNode->updateLayout();
             }
         }
+    }
+};
+
+class $modify(CBRewardUnlockLayer, RewardUnlockLayer) {
+    bool init(int type, RewardsPage* page) {
+        if (!RewardUnlockLayer::init(type, page)) return false;
+        if (type != 2) {
+            log::info("Chest isn`t daily. Amethyst reward skipped");
+            return true;
+        }
+
+        geode::queueInMainThread([]() {
+            auto accountId = argon::getGameAccountData().accountId;
+            if (accountId <= 0) {
+                log::warn("Invalid account ID for amethyst reward submission.");
+                return;
+            }
+
+            
+            int levelId = 6508283; // no matter what level. its just easy
+            auto accountData = argon::getGameAccountData();
+
+            arc::spawn([accountId, accountData, levelId]() -> arc::Future<> {
+                auto authResult = co_await comment::argonToken(accountData);
+                if (authResult.empty()) {
+                    log::warn("argon auth failed for amethyst reward");
+                    co_return;
+                }
+
+                auto authToken = std::move(authResult);
+                log::info("argon auth token is [{}]", authToken);
+                auto request = geode::utils::web::WebRequest();
+                auto body = matjson::makeObject({
+                    {"accountId", accountId},
+                    {"argonToken", authToken},
+                    {"levelId", levelId},
+                });
+
+                auto response = co_await request.bodyJSON(body).post(fmt::format("{}/submitAmethystReward", comment::baseUrl));
+                if (!response.ok()) {
+                    log::warn("submitAmethystReward failed: {}", response.errorMessage());
+                    co_return;
+                }
+
+                auto jsonRes = response.json();
+                if (jsonRes.isErr()) {
+                    log::warn("submitAmethystReward returned invalid JSON");
+                    co_return;
+                }
+
+                auto json = jsonRes.unwrap();
+                if (!json["success"].asBool().unwrapOr(false)) {
+                    log::warn("submitAmethystReward returned failure");
+                    co_return;
+                }
+
+                auto rewardRes = json["amethystReward"].asInt();
+                if (rewardRes.isErr()) {
+                    log::warn("submitAmethystReward missing amethystReward");
+                    co_return;
+                }
+
+                int amethystReward = static_cast<int>(rewardRes.unwrap());
+
+                int current = 0;
+                auto totalRes = json["totalAmethyst"].asInt();
+                if (totalRes.isOk()) {
+                    current = totalRes.unwrap();
+                }
+
+                Mod::get()->setSavedValue("amethyst", current);
+
+                geode::queueInMainThread([amethystReward, current]() {
+                    CCNode* layerRef = CCDirector::sharedDirector()->getRunningScene();
+                    if (!layerRef) {
+                        log::info("!layerRef [line499]");
+                        return;
+                    }
+
+                    if (auto rewardLayer = CurrencyRewardLayer::create(
+                            0, 0, 0, amethystReward, CurrencySpriteType::Star, 0, CurrencySpriteType::Star, 0, CCDirector::sharedDirector()->getWinSize() / 2, CurrencyRewardType::Default, 0.0, 1.0)) {
+                        s_amethystRewardLayer = rewardLayer;
+                        if (rewardLayer->m_mainNode) {
+                            rewardLayer->m_mainNode->setLayout(RowLayout::create()->setAutoScale(false)->setAxisAlignment(AxisAlignment::Start));
+                            rewardLayer->m_mainNode->setScale(1.f);
+                            rewardLayer->m_mainNode->setPositionX(10.f);
+                            rewardLayer->m_mainNode->setContentSize({350.f, 20.f});
+                            rewardLayer->m_mainNode->setAnchorPoint({0.f, 1.f});
+                            rewardLayer->m_diamondsPosition.setPoint(rewardLayer->m_mainNode->getPositionX(), rewardLayer->m_mainNode->getPositionY());  // i dont think this is rigth
+                        }
+                        rewardLayer->m_particlesAdded = false;
+                        rewardLayer->m_diamonds = 0;
+                        rewardLayer->incrementDiamondsCount(current - amethystReward);
+
+                        std::string frameName = "CB_amethyst_001.png"_spr;
+                        auto displayFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName((frameName).c_str());
+                        CCTexture2D* texture = nullptr;
+                        if (!displayFrame) {
+                            texture = CCTextureCache::sharedTextureCache()->addImage((frameName).c_str(), false);
+                            if (texture) {
+                                displayFrame = CCSpriteFrame::createWithTexture(texture, {{0, 0}, texture->getContentSize()});
+                            }
+                        } else {
+                            texture = displayFrame->getTexture();
+                        }
+
+                        if (rewardLayer->m_diamondsSprite && displayFrame) {
+                            rewardLayer->m_diamondsSprite->setDisplayFrame(displayFrame);
+                        }
+
+                        if (rewardLayer->m_diamondsLabel) {
+                            rewardLayer->m_diamondsLabel->runAction(CCRepeatForever::create(CCSequence::create(
+                                CCTintTo::create(0.5f, 255, 100, 255),
+                                CCTintTo::create(0.5f, 255, 255, 255),
+                                nullptr)));
+                        }
+
+                        if (rewardLayer->m_currencyBatchNode && texture) {
+                            rewardLayer->m_currencyBatchNode->setTexture(texture);
+                        }
+
+                        for (auto sprite : CCArrayExt<CurrencySprite*>(rewardLayer->m_objects)) {
+                            if (!sprite) continue;
+                            if (sprite->m_burstSprite) sprite->m_burstSprite->setVisible(false);
+                            if (auto child = sprite->getChildByIndex(0)) {
+                                child->setVisible(false);
+                            }
+
+                            if (sprite->m_spriteType == CurrencySpriteType::Diamond) {
+                                if (displayFrame) {
+                                    sprite->setDisplayFrame(displayFrame);
+                                }
+                            }
+                        }
+
+                        FMODAudioEngine::sharedEngine()->playEffect("secretKey.ogg");
+                        Notification::create(fmt::format("Awarded {} amethyst", GameToolbox::pointsToString(amethystReward)), CCSprite::createWithSpriteFrameName("CB_amethyst_001.png"_spr))->show();
+
+                        if (rewardLayer->m_mainNode) {
+                            rewardLayer->m_mainNode->updateLayout();
+                        }
+
+                        if (layerRef && !Mod::get()->getSettingValue<bool>("disable-reward-animation")) {
+                            layerRef->setZOrder(111);
+                            layerRef->addChild(rewardLayer, 111);
+                        }
+                    }
+                });
+
+                log::debug("awarded {} amethyst from submitAmethystReward (daily chest)", amethystReward);
+                co_return;
+            });
+        });
+
+        return true;
     }
 };
