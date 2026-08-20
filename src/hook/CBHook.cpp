@@ -565,8 +565,8 @@ class $modify(CBRewardUnlockLayer, RewardUnlockLayer) {
                         }
 
                         if (layerRef && !Mod::get()->getSettingValue<bool>("disable-reward-animation")) {
-                            layerRef->setZOrder(111);
-                            layerRef->addChild(rewardLayer, 111);
+                            layerRef->setZOrder(11111);
+                            layerRef->addChild(rewardLayer, 11111);
                         }
                     }
                 });
