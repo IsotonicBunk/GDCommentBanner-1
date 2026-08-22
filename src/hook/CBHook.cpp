@@ -116,7 +116,7 @@ class $modify(CBCommentCell, CommentCell) {
             prevBanner->removeFromParent();
         }
 
-        if (m_accountComment) return;  // don't load banner for account comment
+        //if (m_accountComment) return;  // don't load banner for account comment
 
         auto self = Ref<CBCommentCell>(this);
         int accountId = comment->m_accountID;
